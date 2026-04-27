@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="docs/assets/wordmark-stacked-light-bg.svg" alt="DeployWhisper" width="96"/>
+  <img src="docs/assets/wordmark-stacked-light-bg.svg" alt="DeployWhisper" width="250"/>
 </p>
+
+----
 
 # DeployWhisper
 
@@ -17,7 +19,7 @@ DeployWhisper helps platform engineers, DevOps teams, and SREs review deployment
   <img src="https://img.shields.io/badge/runtime-NiceGUI%20%2B%20FastAPI-0f766e?style=flat-square" alt="NiceGUI plus FastAPI"/>
 </p>
 
-**Quick links:** [Quick Start](#quick-start) · [API Endpoints](#api-endpoints) · [Development](#development) · [Contributing](#contributing) · [Open Source](#open-source)
+**Quick links:** [Quick Start](#quick-start) · [Skills Registry](https://deploywhisper.github.io/skills-registry/) · [API Endpoints](#api-endpoints) · [Development](#development) · [Contributing](#contributing) · [Open Source](#open-source)
 
 ## Table of Contents
 
@@ -52,7 +54,7 @@ The current implementation is built as a pure-Python application with:
 - NiceGUI for the operator-facing web UI
 - FastAPI for the versioned API surface
 - SQLAlchemy and SQLite for persistence
-- Litellm-backed narrative generation with local-only Ollama support
+- Direct SDK adapters for OpenAI, Anthropic, Gemini, and local Ollama narrative generation
 
 ## How It Works
 
@@ -80,11 +82,10 @@ Artifacts -> Parse -> Normalize -> Score -> Blast Radius -> Rollback -> Narrativ
 - API, CLI, and web entrypoints over one shared analysis pipeline
 - Local-first security model that keeps raw IaC local and avoids persisting API keys
 - Custom AI Skills for team-specific domain guidance
+- Public Skills Registry for published built-in skills: <https://deploywhisper.github.io/skills-registry/>
 - Analysis history and audit metadata for later review
 
 ## Screenshots And Demo
-
-This repository already has brand assets under [`docs/assets/`](./docs/assets), but product screenshots and demo motion should be added as the UI evolves.
 
 ### UI Screenshot
 `Upload flow, risk summary, and advisory result`
@@ -96,14 +97,6 @@ This repository already has brand assets under [`docs/assets/`](./docs/assets), 
 `Provider config, topology upload, and custom skills`
 ![DeployWhisper dashboard](docs/assets/demo-settings.png)
 
-### Demo Placeholder
-
-| Area | Placeholder Asset | Intended Content |
-| --- | --- | --- |
-| End-to-end walkthrough | `docs/assets/demo-flow.gif` | Upload artifacts -> analysis progress -> final advisory briefing |
-
-> Suggested next step: once the UI is stable enough, replace these placeholders with real captures and embed them directly in this section.
-
 <!-- Example future embeds:
 ![DeployWhisper dashboard](docs/assets/demo-dashboard.png)
 ![DeployWhisper workflow demo](docs/assets/demo-flow.gif)
@@ -111,17 +104,35 @@ This repository already has brand assets under [`docs/assets/`](./docs/assets), 
 
 ## Current Status
 
-DeployWhisper is an open-source project in active development.
+DeployWhisper is an open-source project in active development. The current
+released version is useful today for teams that want a local-first, advisory
+review layer before infrastructure changes are shipped.
 
-What is implemented today:
+### Released version `v1.0.0`
 
-- Shared NiceGUI + FastAPI runtime
-- Versioned health and analysis endpoints
-- Headless CLI analysis flow
-- Multi-tool parsing and unified analysis pipeline
-- Provider settings, topology management, and custom skill management in the UI
-- Analysis persistence with audit metadata
-- GitHub Actions CI for Python quality checks and sharded tests
+What users can use today:
+
+- **Web review workflow**: upload deployment artifacts in the NiceGUI dashboard and get a persisted advisory report with risk score, severity, recommendation, findings, evidence, context quality, blast radius, rollback guidance, and audit metadata.
+- **Multi-tool analysis**: analyze Terraform, Kubernetes, Ansible, Jenkins, and CloudFormation inputs through one shared pipeline instead of reviewing every tool in isolation.
+- **LLM-assisted narrative**: connect deterministic scoring with plain-English deployment guidance using Ollama, OpenAI, Anthropic, Gemini, OpenRouter, Groq, or xAI provider settings.
+- **Local-first safety posture**: keep raw IaC processing local, avoid storing provider API keys in the database, exclude sensitive files from unsafe handling, and keep every verdict advisory rather than automatically blocking a release.
+- **Evidence-backed confidence**: trace the report back to findings, resource-level contributors, uploaded artifact references, parser coverage, topology freshness, and warning signals when context is limited.
+- **Blast-radius and rollback context**: use service-topology input to explain likely downstream impact and generate rollback steps with complexity scoring.
+- **Analysis history**: review saved reports later, filter previous analyses, inspect audit metadata, and compare repeated scans of the same artifact set.
+- **Provider and team settings UI**: configure LLM provider metadata, upload topology context, manage custom AI Skills, and see provider readiness before running analysis.
+- **REST API and CLI access**: run the same analysis pipeline from `/api/v1` endpoints or the headless CLI for local automation and CI workflows.
+- **Shareable reports**: create read-only report links, optionally protect sensitive shared reports with a password, redact filenames, and compare shared reruns when previous scans exist.
+- **Published Skills Registry**: browse published built-in skills at <https://deploywhisper.github.io/skills-registry/> and extend guidance with custom skills.
+- **Published GitHub Action path**: use the dedicated `deploywhisper/analyze-action@v1` action to analyze PR artifact changes, post/update an advisory PR comment, and expose report outputs for follow-on workflow steps.
+- **Published container path**: run the released container image `ghcr.io/deploywhisper/deploywhisper:1.0.0` with SQLite-backed persistence for a self-hosted single-container setup.
+- **Project quality baseline**: GitHub Actions CI, Python quality checks, sharded tests, local CI scripts, and optional UI accessibility smoke checks are in place.
+
+Why this gives users value:
+
+- Platform and DevOps teams get a faster first-pass deployment review before a human approval meeting.
+- Engineers can see why a change is risky, which resource/file caused it, what to verify, and what rollback concern to discuss.
+- Teams can build trust gradually because reports keep deterministic evidence visible even when LLM narrative is enabled.
+- Open-source users can start locally with Docker or Python, then add provider keys, topology context, custom skills, and GitHub PR automation when they are ready.
 
 What is still evolving:
 
@@ -142,7 +153,16 @@ Planning and design artifacts live under [`_bmad-output/planning-artifacts/`](./
   - Ollama for fully local mode
   - or OpenAI / Anthropic / Gemini / OpenRouter / Groq / xAI credentials via environment variables
 
-For local-only narrative generation, Ollama is the intended path.
+Tier-1 providers use direct adapters:
+
+- OpenAI via the official `openai` SDK
+- Anthropic via the official `anthropic` SDK
+- Gemini via the official `google-genai` SDK
+- Ollama via the local HTTP adapter
+
+OpenRouter, Groq, and xAI remain on the compatibility path through one explicit OpenAI-compatible adapter. For local-only narrative generation, Ollama is the intended path.
+
+Provider settings and health surfaces also expose explicit capability metadata for structured output, local-only mode, remote MCP, local MCP, and tool approval. These MCP-related flags are planning metadata only for now; DeployWhisper does not execute MCP tools in the current narrative flow.
 
 ## Quick Start
 
@@ -168,38 +188,145 @@ The app starts on:
 ./.venv/bin/python -m unittest discover -q
 ```
 
+Credentialed provider smoke tests are opt-in so the default suite remains offline:
+
+```bash
+DEPLOYWHISPER_LIVE_PROVIDER_SMOKE=1 \
+  DEPLOYWHISPER_LIVE_PROVIDER_SMOKE_PROVIDERS=openai \
+  ./.venv/bin/python -m unittest tests.test_llm.test_live_provider_smoke -q
+```
+
+The smoke test loads provider keys from environment variables or `.env` and only
+runs providers with usable keys. Provider-specific model and API-base overrides
+use `DEPLOYWHISPER_LIVE_<PROVIDER>_MODEL` and
+`DEPLOYWHISPER_LIVE_<PROVIDER>_API_BASE`.
+
 ## Docker Deployment
 
 DeployWhisper supports a single-container deployment model.
 
+example: Docker compose file `docker-compose.yml`
+
 ```bash
-docker compose up -d --build
+services:
+  deploywhisper:
+    # If you want to use the already published image, uncomment the "image" section and comment out the build section.
+    image: ghcr.io/deploywhisper/deploywhisper:1.0.0
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8080
+      APP_BASE_URL: http://localhost:8080
+      LOG_LEVEL: INFO
+      DATABASE_URL: sqlite:///data/deploywhisper.db
+      DEPLOYWHISPER_SHARE_TOKEN: "DEPLOYWHISPER_API_TOKEN-for-test-123"
+      LLM_PROVIDER: ollama
+      LLM_MODEL: ollama/gemma4:e4b
+      LLM_API_BASE: http://host.docker.internal:11434
+      LLM_API_KEY: ""
+      OPENAI_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+      GEMINI_API_KEY: ""
+      GOOGLE_API_KEY: ""
+      OPENROUTER_API_KEY: ""
+      GROQ_API_KEY: ""
+      XAI_API_KEY: ""
+    volumes:
+      - deploywhisper-data:/app/data
+
+volumes:
+  deploywhisper-data:
+```
+
+after create this file then run:
+```bash
+docker-compose up -d
 ```
 
 Default container behavior:
 
 - Port `8080` exposed from the app container
 - SQLite database stored under `/app/data`
-- Default provider set to Ollama
+- Default provider set to Ollama directly in `docker-compose.yml`
+- `POST /api/v1/analyses/{id}/share` stays disabled until `DEPLOYWHISPER_SHARE_TOKEN` is set in Compose
 
-Example for local Ollama mode:
+Provider settings in the checked-in `docker-compose.yml` are literal container
+environment values. The file does not rely on project-root `.env` interpolation.
+For machine-specific provider settings, create an untracked
+`docker-compose.override.yml` and put only your local overrides there.
 
-```env
-LLM_PROVIDER=ollama
-LLM_MODEL=ollama/llama3
-LLM_API_BASE=http://host.docker.internal:11434
+Example `docker-compose.override.yml` for OpenAI:
+
+```yaml
+services:
+  deploywhisper:
+    environment:
+      LLM_PROVIDER: openai
+      LLM_MODEL: gpt-4.1-mini
+      LLM_API_BASE: https://api.openai.com/v1
+      OPENAI_API_KEY: your-real-key
 ```
 
-Example for OpenAI:
+Example override for Groq:
 
-```env
-LLM_PROVIDER=openai
-LLM_MODEL=gpt-4.1-mini
-LLM_API_BASE=https://api.openai.com/v1
-OPENAI_API_KEY=your-real-key
+```yaml
+services:
+  deploywhisper:
+    environment:
+      LLM_PROVIDER: groq
+      LLM_MODEL: groq/qwen/qwen3-32b
+      LLM_API_BASE: https://api.groq.com/openai/v1
+      GROQ_API_KEY: your-real-key
 ```
 
-Do not bake secrets into the image. Pass them at runtime through Compose, your shell environment, or your orchestration platform.
+Example override for local Ollama:
+
+```yaml
+services:
+  deploywhisper:
+    environment:
+      LLM_PROVIDER: ollama
+      LLM_MODEL: ollama/llama3
+      LLM_API_BASE: http://host.docker.internal:11434
+```
+
+After editing Compose settings, recreate the container:
+
+```bash
+docker compose up -d --force-recreate
+```
+
+If provider settings were already saved in the DeployWhisper settings page,
+those non-secret database settings take precedence over `LLM_PROVIDER`,
+`LLM_MODEL`, and `LLM_API_BASE`; API keys still come only from container
+environment variables or runtime secrets. When you select a provider in the
+settings page, DeployWhisper resolves that provider's environment key
+(`GROQ_API_KEY` for Groq, `OPENAI_API_KEY` for OpenAI, or fallback
+`LLM_API_KEY`) and pre-fills the API key field from the running container.
+Saving the settings page activates the selected provider as the single runtime
+provider.
+
+Do not bake secrets into the image. For local Docker Compose, keep secrets in
+an untracked `docker-compose.override.yml`; for managed deployments, use your
+orchestration platform's secret mechanism.
+
+
+### For a straightforward ad hoc Docker command
+
+Direct `docker run` example:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e APP_HOST=0.0.0.0 \
+  -e APP_PORT=8080 \
+  -e APP_BASE_URL=https://deploywhisper.example.com \
+  -e DEPLOYWHISPER_SHARE_TOKEN=replace-with-a-long-random-secret \
+  ghcr.io/deploywhisper/deploywhisper:1.0.0
+```
 
 ## API Endpoints
 
@@ -434,7 +561,7 @@ npm run setup:ui-review
 npm run test:ui-review:voiceover
 ```
 
-## CI
+## GitHUb CI
 
 GitHub Actions is configured in [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).
 
@@ -447,6 +574,16 @@ repository:
 Typical PR usage:
 
 ```yaml
+name: DeployWhisper
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   deploywhisper:
     runs-on: ubuntu-latest
@@ -464,20 +601,67 @@ What the action does:
 - detects changed files from the pull request diff
 - filters to supported DeployWhisper artifacts locally before upload
 - submits those artifacts to the existing `POST /api/v1/analyses` endpoint
+- posts a single markdown PR comment and updates that same comment on re-runs
+- compares the latest report with the previous PR scan so reruns show score and severity deltas in the refreshed comment
 - exits `0` when analysis succeeds, regardless of risk verdict
 - exposes outputs for follow-on GitHub steps:
   - `report-id`
-  - `report-link`
+  - `report-link` (shareable `/reports/{id}` URL)
   - `severity`
   - `recommendation`
   - `share-summary-json`
   - `share-summary-markdown`
+  - `comment-id`
+  - `comment-url`
+  - `comment-updated`
 
 Optional inputs:
 
 - `api-token`: bearer token for protected DeployWhisper APIs
 - `changed-files`: override auto-detected PR files with a comma or newline separated list
 - `working-directory`: repository root when the checkout is not in `.`
+
+Shared report links now resolve to `/reports/{id}` read-only pages. For sensitive
+reports, configure password protection and opt-in file-name redaction via
+`POST /api/v1/analyses/{id}/share` with the `X-DeployWhisper-Share-Token`
+header. Set `DEPLOYWHISPER_SHARE_TOKEN` before exposing that management API.
+When a prior scan exists for the same analyzed artifact set, the shared report
+page also exposes a `Compare with previous` view with risk-score, findings, and
+evidence deltas.
+
+### GitHub App Mode
+
+DeployWhisper also supports a GitHub App adapter for webhook-driven PR analysis,
+checks API publishing, and OAuth-guided installation handoff. The App adapter is
+documented in [`docs/github-app.md`](./docs/github-app.md) and is designed to
+run in three lanes:
+
+- Action-first: workflow file + Marketplace Action
+- Advanced self-hosted GitHub App: webhook, checks, and OAuth-backed installation flow against your own DeployWhisper server
+- Combined mode: Action for explicit workflow control, self-hosted GitHub App for checks and richer installation UX
+
+The recommended open-source posture is Action-first. If you want GitHub App
+capabilities, create a private/self-hosted GitHub App in your own account or
+organization and point it at your own DeployWhisper instance. See
+[`docs/github-app-self-hosted-setup.md`](./docs/github-app-self-hosted-setup.md).
+Keep the `DeployWhisper / Risk Analysis` check advisory-only in GitHub branch
+protection; do not add it as a required status check.
+
+To scaffold this setup into another repository with a workflow file, README
+update, and optional self-hosted GitHub App notes, run:
+
+```bash
+deploywhisper github init
+```
+
+Example:
+
+```bash
+curl -X POST http://127.0.0.1:8080/api/v1/analyses/17/share \
+  -H "Content-Type: application/json" \
+  -H "X-DeployWhisper-Share-Token: $DEPLOYWHISPER_SHARE_TOKEN" \
+  -d '{"password":"review-only","redact_filenames":true}'
+```
 
 The app repository no longer carries Marketplace action packaging files. Action
 source, release metadata, and consumer smoke verification live in the dedicated
@@ -593,9 +777,9 @@ Near-term directions already visible in the repo and planning artifacts:
 - more complete incident-ingestion and trend workflows
 - better contribution and onboarding surfaces for open-source users
 
-## Status
+## Status as we’re in full swing
 
-DeployWhisper is in active development.
+### DeployWhisper is under active development, while release `v1.0.0` is stable.
 
 Current implementation state:
 
@@ -604,6 +788,6 @@ Current implementation state:
 - API, UI, and CLI surfaces exist
 - CI is in place
 - broader production hardening is still underway
-- release 1.0.0 is out now
+
 
 This repository should be treated as an evolving open-source platform project rather than a fully hardened production product.
