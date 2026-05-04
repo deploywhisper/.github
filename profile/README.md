@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="deploywhisper_light_logo-white_bg.jpg" alt="DeployWhisper" width="250"/>
+  <img src="deploywhisper_light_logo-white_bg.jpg" alt="DeployWhisper" width="450"/>
 </p>
 
 ----
@@ -76,7 +76,7 @@ Artifacts -> Parse -> Normalize -> Score -> Blast Radius -> Rollback -> Narrativ
 - Multi-tool intake for Terraform, Kubernetes, Ansible, Jenkins, and CloudFormation
 - Plain-English risk narrative and deploy recommendation
 - Advisory-only output with explicit human-review posture
-- Blast radius analysis using a service-topology file
+- Blast radius analysis using a project-scoped service-topology graph with a shared multi-source import foundation
 - Rollback plan generation with complexity signaling
 - Incident-history matching for operational memory
 - API, CLI, and web entrypoints over one shared analysis pipeline
@@ -119,7 +119,7 @@ What users can use today:
 - **Evidence-backed confidence**: trace the report back to findings, resource-level contributors, uploaded artifact references, parser coverage, topology freshness, and warning signals when context is limited.
 - **Blast-radius and rollback context**: use service-topology input to explain likely downstream impact and generate rollback steps with complexity scoring.
 - **Analysis history**: review saved reports later, filter previous analyses, inspect audit metadata, and compare repeated scans of the same artifact set.
-- **Provider and team settings UI**: configure LLM provider metadata, upload topology context, manage custom AI Skills, and see provider readiness before running analysis.
+- **Provider and admin settings UI**: configure LLM provider metadata, upload topology context, manage custom AI Skills, and see provider readiness before running analysis.
 - **REST API and CLI access**: run the same analysis pipeline from `/api/v1` endpoints or the headless CLI for local automation and CI workflows.
 - **Shareable reports**: create read-only report links, optionally protect sensitive shared reports with a password, redact filenames, and compare shared reruns when previous scans exist.
 - **Published Skills Registry**: browse published built-in skills at <https://deploywhisper.github.io/skills-registry/> and extend guidance with custom skills.
@@ -137,6 +137,7 @@ Why this gives users value:
 What is still evolving:
 
 - Production-grade authn/authz for shared deployments
+- Lightweight project/workspace scoping for cleaner multi-repository history isolation
 - Richer incident ingestion workflows
 - Broader deployment integrations and release automation
 - More complete NFR hardening for shared or internet-facing environments
@@ -632,13 +633,13 @@ evidence deltas.
 ### GitHub App Mode
 
 DeployWhisper also supports a GitHub App adapter for webhook-driven PR analysis,
-checks API publishing, and OAuth-guided installation handoff. The App adapter is
+checks API publishing, and self-hosted app setup. The App adapter is
 documented in [`docs/github-app.md`](./docs/github-app.md) and is designed to
 run in three lanes:
 
 - Action-first: workflow file + Marketplace Action
-- Advanced self-hosted GitHub App: webhook, checks, and OAuth-backed installation flow against your own DeployWhisper server
-- Combined mode: Action for explicit workflow control, self-hosted GitHub App for checks and richer installation UX
+- Advanced self-hosted GitHub App: webhook and checks against your own DeployWhisper server, with app creation and installation handled in GitHub's UI
+- Combined mode: Action for explicit workflow control, self-hosted GitHub App for checks and webhook automation
 
 The recommended open-source posture is Action-first. If you want GitHub App
 capabilities, create a private/self-hosted GitHub App in your own account or
